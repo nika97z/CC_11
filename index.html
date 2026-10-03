@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Deficit Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Energy Balance</div>
+  <h1>Daily Deficit Calculator</h1>
+  <p class="subhead" id="page-subhead">Turn a weight-loss goal into the daily calorie target that gets you there.</p>
+
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="step-label" id="step-label">Step 1 of 3</div>
+    <div class="progress" aria-hidden="true">
+      <span class="progress-seg done"></span>
+      <span class="progress-seg"></span>
+      <span class="progress-seg"></span>
+    </div>
+  </div>
+
+  <form class="card step active" id="step-1" novalidate>
+    <div class="field-row">
+      <div class="field">
+        <label for="weight-loss">Weight to lose</label>
+        <div class="input-wrap">
+          <input type="number" id="weight-loss" name="weight-loss" inputmode="decimal" step="0.1" min="0" value="5" aria-describedby="weight-loss-error">
+          <span class="unit">kg</span>
+        </div>
+        <div class="field-error" id="weight-loss-error"></div>
+      </div>
+      <div class="field">
+        <label for="months">Timeframe</label>
+        <div class="input-wrap">
+          <input type="number" id="months" name="months" inputmode="decimal" step="0.1" min="0" value="2" aria-describedby="months-error">
+          <span class="unit">months</span>
+        </div>
+        <div class="field-error" id="months-error"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="calculate">Continue</button>
+
+    <div class="form-error" id="form-error-1" role="alert"></div>
+  </form>
+
+  <form class="card step" id="step-2" novalidate>
+    <div class="field">
+      <label>Gender</label>
+      <div class="segmented" role="radiogroup" aria-label="Gender">
+        <input type="radio" id="gender-female" name="gender" value="female" checked>
+        <label for="gender-female">Female</label>
+        <input type="radio" id="gender-male" name="gender" value="male">
+        <label for="gender-male">Male</label>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="age">Age</label>
+        <div class="input-wrap">
+          <input type="number" id="age" name="age" inputmode="numeric" step="1" min="0" value="32" aria-describedby="age-error">
+          <span class="unit">yrs</span>
+        </div>
+        <div class="field-error" id="age-error"></div>
+      </div>
+      <div class="field">
+        <label for="height">Height</label>
+        <div class="input-wrap">
+          <input type="number" id="height" name="height" inputmode="decimal" step="0.1" min="0" value="165" aria-describedby="height-error">
+          <span class="unit">cm</span>
+        </div>
+        <div class="field-error" id="height-error"></div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="current-weight">Current weight</label>
+        <div class="input-wrap">
+          <input type="number" id="current-weight" name="current-weight" inputmode="decimal" step="0.1" min="0" value="70" aria-describedby="current-weight-error">
+          <span class="unit">kg</span>
+        </div>
+        <div class="field-error" id="current-weight-error"></div>
+      </div>
+      <div class="field">
+        <label for="activity-level">Activity level</label>
+        <select id="activity-level" name="activity-level" class="field-select">
+          <option value="1.2">Sedentary ×1.2</option>
+          <option value="1.375" selected>Lightly active ×1.375</option>
+          <option value="1.55">Moderately active ×1.55</option>
+          <option value="1.725">Very active ×1.725</option>
+          <option value="1.9">Extremely active ×1.9</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button type="button" class="button-back" id="back-2">Back</button>
+      <button type="submit" class="calculate">Continue</button>
+    </div>
+
+    <div class="form-error" id="form-error-2" role="alert"></div>
+  </form>
+
+  <div class="card step" id="step-3">
+    <div class="result" id="result">
+      <div class="result-figure">
+        <span class="result-number" id="result-number">0</span>
+        <span class="result-unit">kcal / day</span>
+      </div>
+      <p class="result-sentence" id="result-sentence"></p>
+
+      <div class="stat-list">
+        <div class="stat-row">
+          <span class="stat-label">BMR (Mifflin-St Jeor)</span>
+          <span class="stat-value" id="stat-bmr">0 kcal</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">TDEE (maintenance)</span>
+          <span class="stat-edit">
+            <input type="number" id="tdee-adjust" class="stat-input" inputmode="decimal" step="1" min="1" value="0" aria-label="Adjust TDEE">
+            <span class="stat-unit">kcal</span>
+          </span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Weight to lose</span>
+          <span class="stat-edit">
+            <input type="number" id="weight-adjust" class="stat-input" inputmode="decimal" step="0.1" min="0.1" value="0" aria-label="Weight to lose in kilograms">
+            <span class="stat-unit">kg</span>
+          </span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Daily deficit needed</span>
+          <span class="stat-value" id="stat-deficit">0 kcal</span>
+        </div>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge-track">
+          <div class="gauge-marker" id="gauge-marker"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>Conservative</span>
+          <span>Moderate</span>
+          <span>Aggressive</span>
+        </div>
+      </div>
+
+      <div class="warning-banner" id="warning-banner" role="alert">
+        <span class="dot"></span>
+        <p><strong>That's an aggressive deficit.</strong> Sustained loss above 1,000 kcal/day is hard on the body — consider a longer timeframe, or check in with a doctor or nutritionist before proceeding.</p>
+      </div>
+
+      <div class="warning-banner" id="low-intake-banner" role="alert">
+        <span class="dot"></span>
+        <p id="low-intake-text"></p>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button type="button" class="button-back" id="back-3">Back</button>
+      <button type="button" class="calculate" id="start-tracker">Start</button>
+    </div>
+  </div>
+
+  <div class="card step" id="step-4">
+    <div class="level-panel">
+      <span class="level-badge" id="level-badge">Level 1</span>
+      <div class="level-track" id="level-track">
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+        <div class="level-seg"><div class="fill"></div></div>
+      </div>
+      <p class="level-caption" id="level-caption"></p>
+    </div>
+
+    <div class="day-timer" id="day-timer">
+      <span class="day-timer-label" id="day-timer-label">Day 1 · not logged yet</span>
+      <span class="day-timer-clock" id="day-timer-clock">24:00:00</span>
+    </div>
+
+    <form id="log-form" novalidate>
+      <div class="field-row">
+        <div class="field">
+          <label for="eaten-input">Calories eaten</label>
+          <div class="input-wrap">
+            <input type="number" id="eaten-input" inputmode="decimal" step="1" min="0" aria-describedby="eaten-error">
+            <span class="unit">kcal</span>
+          </div>
+          <div class="field-error" id="eaten-error"></div>
+        </div>
+        <div class="field">
+          <label for="steps-input">Steps taken</label>
+          <div class="input-wrap">
+            <input type="number" id="steps-input" inputmode="decimal" step="100" min="0" aria-describedby="steps-error">
+            <span class="unit">steps</span>
+          </div>
+          <div class="field-error" id="steps-error"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="calculate">Add to today</button>
+      <p class="log-hint" id="log-hint"></p>
+    </form>
+
+    <div class="day-banner" id="day-banner" role="status">
+      <span class="dot"></span>
+      <p id="day-banner-text"></p>
+    </div>
+
+    <div class="log-list" id="log-list"></div>
+
+    <div class="confirm-box" id="confirm-box" role="alertdialog" aria-labelledby="confirm-text" hidden>
+      <p class="confirm-text" id="confirm-text">Are you sure you want to end the game?</p>
+      <div class="step-actions">
+        <button type="button" class="button-back" id="keep-playing">Keep playing</button>
+        <button type="button" class="button-danger" id="confirm-end">End game</button>
+      </div>
+    </div>
+
+    <button type="button" class="button-back" id="exit-game">End game</button>
+  </div>
+
+  <p class="footnote">Estimate based on <code>1 kg body fat ≈ 7,700 kcal</code>. Individual metabolism varies — use this as a starting point, not a prescription.</p>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>
