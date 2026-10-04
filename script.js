@@ -6,15 +6,14 @@ let totalCaloriesToLose = 0;
 let computedTdee = 0;
 let currentGender = 'female';
 let endedManually = false;
-let trackerStart = 0;
+let trackerStartDay = 0;
 let days = [];
 let gameOverDay = 0;
 let timerHandle = null;
 let levelThresholds = [];
 
-const DAY_LENGTH_MINUTES = 24 * 60; // set to 2 to test day rollover quickly
-const DAY_MS = DAY_LENGTH_MINUTES * 60 * 1000;
-const URGENT_MS = DAY_MS / 24;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const URGENT_MS = 60 * 60 * 1000; // last hour before midnight
 
 const TRACKER_STORAGE_KEY = 'calorieDeficitTracker';
 
@@ -109,7 +108,7 @@ function startTracker() {
   subhead.textContent = 'Log today’s calories and steps to climb the ladder.';
 
   levelThresholds = computeLevelThresholds(totalCaloriesToLose);
-  trackerStart = Date.now();
+  trackerStartDay = localDayNumber(Date.now());
   days = [];
   gameOverDay = 0;
   endedManually = false;
@@ -125,8 +124,19 @@ function startTracker() {
   if (focusTarget) focusTarget.focus();
 }
 
+// Days follow the device's own calendar and time zone, so a new day starts at local midnight.
+function localDayNumber(time) {
+  const date = new Date(time);
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS;
+}
+
+function nextLocalMidnight(time) {
+  const date = new Date(time);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
+}
+
 function currentDayIndex(now) {
-  return Math.max(1, Math.floor((now - trackerStart) / DAY_MS) + 1);
+  return Math.max(1, localDayNumber(now) - trackerStartDay + 1);
 }
 
 function trackerProgress() {
@@ -162,7 +172,7 @@ function formatClock(ms) {
 function updateTimer() {
   const now = Date.now();
   const today = currentDayIndex(now);
-  const remaining = trackerStart + today * DAY_MS - now;
+  const remaining = nextLocalMidnight(now) - now;
   const logged = days.some(entry => entry.day === today);
   dayTimerLabel.textContent = 'Day ' + today + (logged ? ' · logged' : ' · not logged yet');
   dayTimerClock.textContent = formatClock(remaining);
@@ -276,7 +286,7 @@ function saveTrackerState() {
   try {
     localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify({
       totalCaloriesToLose,
-      trackerStart,
+      trackerStartDay,
       days,
       gameOverDay,
       endedManually,
@@ -286,12 +296,24 @@ function saveTrackerState() {
   } catch (e) {}
 }
 
+// Saves from before calendar days counted 24-hour periods from the start time. Put the current
+// period on the date its old deadline falls on, so switching never turns a logged day into a missed one.
+function legacyStartDay(trackerStart, now) {
+  const period = Math.max(1, Math.floor((now - trackerStart) / DAY_MS) + 1);
+  const deadline = trackerStart + period * DAY_MS;
+  return Math.min(localDayNumber(now), localDayNumber(deadline) - (period - 1));
+}
+
 function loadTrackerState() {
   try {
     const raw = localStorage.getItem(TRACKER_STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (!data || !data.totalCaloriesToLose || !data.trackerStart || !Array.isArray(data.days)) return null;
+    if (!data || !data.totalCaloriesToLose || !Array.isArray(data.days)) return null;
+    if (typeof data.trackerStartDay !== 'number') {
+      if (!data.trackerStart) return null;
+      data.trackerStartDay = legacyStartDay(data.trackerStart, Date.now());
+    }
     return data;
   } catch (e) {
     return null;
@@ -302,15 +324,14 @@ function restoreTracker(data) {
   currentWeightInput.value = data.currentWeightKg;
   totalCaloriesToLose = data.totalCaloriesToLose;
   computedTdee = data.tdee;
-  trackerStart = data.trackerStart;
+  trackerStartDay = data.trackerStartDay;
   days = data.days;
   gameOverDay = data.gameOverDay || 0;
   endedManually = !!data.endedManually;
   levelThresholds = computeLevelThresholds(totalCaloriesToLose);
 
-  const alreadyOver = gameOverDay > 0;
   checkMissedDay(Date.now());
-  if (gameOverDay && !alreadyOver) saveTrackerState();
+  saveTrackerState(); // also pins the start day of a migrated older save
 
   renderLog();
   eatenInput.value = '';
@@ -346,7 +367,7 @@ function endGame() {
 function goHome() {
   stopTimer();
   try { localStorage.removeItem(TRACKER_STORAGE_KEY); } catch (e) {}
-  trackerStart = 0;
+  trackerStartDay = 0;
   days = [];
   gameOverDay = 0;
   endedManually = false;
@@ -614,13 +635,6 @@ confirmBox.addEventListener('keydown', event => {
 document.getElementById('start-tracker').addEventListener('click', startTracker);
 tdeeAdjustInput.addEventListener('input', updateTargetFromTdee);
 weightAdjustInput.addEventListener('input', updateGoalFromWeight);
-
-const dayLengthLabel = DAY_LENGTH_MINUTES % 60 === 0
-  ? DAY_LENGTH_MINUTES / 60 + (DAY_LENGTH_MINUTES === 60 ? ' hour' : ' hours')
-  : DAY_LENGTH_MINUTES + (DAY_LENGTH_MINUTES === 1 ? ' minute' : ' minutes');
-document.getElementById('log-hint').textContent =
-  'Entries on the same day add together, and maintenance (TDEE) is subtracted once per day. Log at least once every ' +
-  dayLengthLabel + ' or the game ends.';
 
 const savedTracker = loadTrackerState();
 if (savedTracker) restoreTracker(savedTracker);
